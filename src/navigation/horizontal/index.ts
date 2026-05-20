@@ -7,6 +7,27 @@ const navigationData = (): VerticalNavItemsType => {
       title: 'Dashboards',
       icon: 'tabler:smart-home',
       path: '/dashboards'
+    },
+    {
+      title: 'Leads',
+      icon: 'tabler:smart-home',
+      path: '/leads'
+    },
+    {
+      title: 'Configuración',
+      icon: 'tabler:settings',
+      children: [
+        {
+          title: 'Roles',
+          icon: 'tabler:shield-lock',
+          path: '/settings/roles',
+        },
+        {
+          title: 'Usuarios',
+          icon: 'tabler:users',
+          path: '/settings/users',
+        }
+      ]
     }
   ]
 }
