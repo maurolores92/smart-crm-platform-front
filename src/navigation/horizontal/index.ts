@@ -14,6 +14,11 @@ const navigationData = (): VerticalNavItemsType => {
       path: '/leads'
     },
     {
+      title: 'Pipeline',
+      icon: 'tabler:smart-home',
+      path: '/pipeline'
+    },
+    {
       title: 'Configuración',
       icon: 'tabler:settings',
       children: [
