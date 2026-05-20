@@ -3,20 +3,25 @@ import { VerticalNavItemsType } from 'src/@core/layouts/types'
 
 const navigationData = (): VerticalNavItemsType => {
   return [
-    {
+        {
       title: 'Dashboards',
       icon: 'tabler:smart-home',
       path: '/dashboards'
     },
     {
       title: 'Leads',
-      icon: 'tabler:smart-home',
+      icon: 'mdi:leads',
       path: '/leads'
     },
     {
       title: 'Pipeline',
-      icon: 'tabler:smart-home',
+      icon: 'fluent:pipeline-20-regular',
       path: '/pipeline'
+    },
+    {
+      title: 'Tareas',
+      icon: 'material-symbols:task-outline',
+      path: '/tasks'
     },
     {
       title: 'Configuración',

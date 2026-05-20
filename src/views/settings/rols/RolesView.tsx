@@ -75,7 +75,7 @@ const RolesView = () => {
 
   const handleUpdateRole = async () => {
     if (!selectedRole) return
-    
+
     try {
       await apiConnector.put(`/users/roles/${selectedRole.id}`, formData)
       await fetchRoles()
@@ -97,7 +97,7 @@ const RolesView = () => {
 
   const handleDeleteRole = async () => {
     if (!selectedRole) return
-    
+
     try {
       await apiConnector.remove(`/users/roles/${selectedRole.id}`)
       await fetchRoles()
@@ -109,7 +109,7 @@ const RolesView = () => {
 
   const handleFormChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
-    
+
     if (field === 'name') {
       const slug = value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
       setFormData(prev => ({ ...prev, slug }))
@@ -142,77 +142,20 @@ const RolesView = () => {
             }
           />
           <CardContent>
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Nombre</TableCell>
-                    <TableCell>Slug</TableCell>
-                    <TableCell>Color</TableCell>
-                    <TableCell>Tipo</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {roles.map(role => (
-                    <TableRow key={role.id}>
-                      <TableCell>{role.name}</TableCell>
-                      <TableCell>
-                        <Chip label={role.slug} size='small' />
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <Box
-                            sx={{
-                              width: 24,
-                              height: 24,
-                              borderRadius: 1,
-                              backgroundColor: role.color,
-                              border: '1px solid #ddd'
-                            }}
-                          />
-                          <Typography variant='body2'>{role.color}</Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Chip label='Global' color='primary' size='small' variant='outlined' />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </CardContent>
-        </Card>
-      </Grid>
-
-      <Grid item xs={12}>
-        <Card>
-          <CardHeader
-            title='Mis Roles Personalizados'
-            subheader='Roles creados por mí para mis usuarios'
-          />
-          <CardContent>
-            {myRoles.length === 0 ? (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
-                <Typography variant='body2' color='text.secondary'>
-                  No tienes roles personalizados aún. ¡Crea uno!
-                </Typography>
-              </Box>
-            ) : (
-              <TableContainer component={Paper}>
-                <Table>
+            <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+              <TableContainer sx={{ maxHeight: 760 }}>
+                <Table stickyHeader aria-label='global roles table'>
                   <TableHead>
                     <TableRow>
                       <TableCell>Nombre</TableCell>
                       <TableCell>Slug</TableCell>
                       <TableCell>Color</TableCell>
                       <TableCell>Tipo</TableCell>
-                      <TableCell>Acciones</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {myRoles.map(role => (
-                      <TableRow key={role.id}>
+                    {roles.map(role => (
+                      <TableRow key={role.id} hover>
                         <TableCell>{role.name}</TableCell>
                         <TableCell>
                           <Chip label={role.slug} size='small' />
@@ -232,21 +175,82 @@ const RolesView = () => {
                           </Box>
                         </TableCell>
                         <TableCell>
-                          <Chip label='Personal' color='secondary' size='small' variant='outlined' />
-                        </TableCell>
-                        <TableCell>
-                          <IconButton size='small' color='primary' onClick={() => handleOpenEditDialog(role)}>
-                            <Icon icon='tabler:edit' />
-                          </IconButton>
-                          <IconButton size='small' color='error' onClick={() => handleOpenDeleteDialog(role)}>
-                            <Icon icon='tabler:trash' />
-                          </IconButton>
+                          <Chip label='Global' color='primary' size='small' variant='outlined' />
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               </TableContainer>
+            </Paper>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      <Grid item xs={12}>
+        <Card>
+          <CardHeader
+            title='Mis Roles Personalizados'
+            subheader='Roles creados por mí para mis usuarios'
+          />
+          <CardContent>
+            {myRoles.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant='body2' color='text.secondary'>
+                  No tienes roles personalizados aún. ¡Crea uno!
+                </Typography>
+              </Box>
+            ) : (
+              <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+                <TableContainer sx={{ maxHeight: 760 }}>
+                  <Table stickyHeader aria-label='custom roles table'>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Nombre</TableCell>
+                        <TableCell>Slug</TableCell>
+                        <TableCell>Color</TableCell>
+                        <TableCell>Tipo</TableCell>
+                        <TableCell>Acciones</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {myRoles.map(role => (
+                        <TableRow key={role.id} hover>
+                          <TableCell>{role.name}</TableCell>
+                          <TableCell>
+                            <Chip label={role.slug} size='small' />
+                          </TableCell>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                              <Box
+                                sx={{
+                                  width: 24,
+                                  height: 24,
+                                  borderRadius: 1,
+                                  backgroundColor: role.color,
+                                  border: '1px solid #ddd'
+                                }}
+                              />
+                              <Typography variant='body2'>{role.color}</Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Chip label='Personal' color='secondary' size='small' variant='outlined' />
+                          </TableCell>
+                          <TableCell>
+                            <IconButton size='small' color='primary' onClick={() => handleOpenEditDialog(role)}>
+                              <Icon icon='tabler:edit' />
+                            </IconButton>
+                            <IconButton size='small' color='error' onClick={() => handleOpenDeleteDialog(role)}>
+                              <Icon icon='tabler:trash' />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Paper>
             )}
           </CardContent>
         </Card>

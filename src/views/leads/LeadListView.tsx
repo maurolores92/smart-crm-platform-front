@@ -30,7 +30,8 @@ import {
 } from '@mui/material'
 import Icon from 'src/@core/components/icon'
 import apiConnector from 'src/services/api.service'
-import ModalLeads, { Lead } from './components/ModalLeads'
+import LeadDetailsDrawer from './components/LeadDetailsDrawer'
+import type { Lead } from './components/ModalLeads'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -79,8 +80,8 @@ const LeadListView = () => {
   const [priorityFilter, setPriorityFilter] = useState('')
 
   // Modal State
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create')
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [drawerMode, setDrawerMode] = useState<'create' | 'edit' | 'view'>('create')
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
 
   // Delete Dialog State
@@ -92,6 +93,7 @@ const LeadListView = () => {
       setDebouncedSearch(search)
       setPage(0) // Reset to first page on new search
     }, 500)
+
     return () => clearTimeout(handler)
   }, [search])
 
@@ -107,7 +109,7 @@ const LeadListView = () => {
       if (priorityFilter) params.append('priority', priorityFilter)
 
       const response: any = await apiConnector.get(`/leads?${params.toString()}`)
-      
+
       setLeads(response.data || [])
       setTotal(response.total || 0)
     } catch (error) {
@@ -135,22 +137,22 @@ const LeadListView = () => {
   }, [])
 
   // Action Handlers
-  const handleOpenModal = (mode: 'create' | 'edit' | 'view', lead: Lead | null = null) => {
-    setModalMode(mode)
+  const handleOpenDrawer = (mode: 'create' | 'edit' | 'view', lead: Lead | null = null) => {
+    setDrawerMode(mode)
     setSelectedLead(lead)
-    setIsModalOpen(true)
+    setDrawerOpen(true)
   }
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false)
+  const handleCloseDrawer = () => {
+    setDrawerOpen(false)
     setSelectedLead(null)
   }
 
   const handleSubmitLead = async (data: Partial<Lead>) => {
     try {
-      if (modalMode === 'create') {
+      if (drawerMode === 'create') {
         await apiConnector.post('/leads', data)
-      } else if (modalMode === 'edit' && selectedLead) {
+      } else if (drawerMode === 'edit' && selectedLead) {
         await apiConnector.put(`/leads/${selectedLead.id}`, data)
       }
       fetchLeads()
@@ -191,7 +193,7 @@ const LeadListView = () => {
               <Button
                 variant='contained'
                 startIcon={<Icon icon='tabler:plus' />}
-                onClick={() => handleOpenModal('create')}
+                onClick={() => handleOpenDrawer('create')}
               >
                 Nuevo Lead
               </Button>
@@ -255,97 +257,99 @@ const LeadListView = () => {
             </Grid>
 
             {/* Table */}
-            <TableContainer component={Paper} variant='outlined'>
-              {loading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
-                  <CircularProgress />
-                </Box>
-              ) : (
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Nombre</TableCell>
-                      <TableCell>Compañía</TableCell>
-                      <TableCell>Email / Tel</TableCell>
-                      <TableCell>Estado</TableCell>
-                      <TableCell>Prioridad</TableCell>
-                      <TableCell>Asignado A</TableCell>
-                      <TableCell>Fecha Creación</TableCell>
-                      <TableCell align='right'>Acciones</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {leads.length === 0 ? (
+            <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+              <TableContainer sx={{ maxHeight: 760 }}>
+                {loading ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
+                    <CircularProgress />
+                  </Box>
+                ) : (
+                  <Table stickyHeader aria-label='leads table'>
+                    <TableHead>
                       <TableRow>
-                        <TableCell colSpan={8} align='center'>
-                          No se encontraron leads.
-                        </TableCell>
+                        <TableCell>Nombre</TableCell>
+                        <TableCell>Compañía</TableCell>
+                        <TableCell>Email / Tel</TableCell>
+                        <TableCell>Estado</TableCell>
+                        <TableCell>Prioridad</TableCell>
+                        <TableCell>Asignado A</TableCell>
+                        <TableCell>Fecha Creación</TableCell>
+                        <TableCell align='right'>Acciones</TableCell>
                       </TableRow>
-                    ) : (
-                      leads.map(lead => (
-                        <TableRow key={lead.id} hover>
-                          <TableCell>
-                            <Typography variant='body2' sx={{ fontWeight: 600 }}>
-                              {lead.name}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>{lead.company}</TableCell>
-                          <TableCell>
-                            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                              <Typography variant='body2'>{lead.email}</Typography>
-                              <Typography variant='caption' color='textSecondary'>{lead.phone || '-'}</Typography>
-                            </Box>
-                          </TableCell>
-                          <TableCell>
-                            <Chip
-                              label={statusLabels[lead.status] || lead.status}
-                              color={statusColors[lead.status] || 'default'}
-                              size='small'
-                              variant='outlined'
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Chip
-                              label={priorityLabels[lead.priority] || lead.priority}
-                              color={priorityColors[lead.priority] || 'default'}
-                              size='small'
-                            />
-                          </TableCell>
-                          <TableCell>
-                            {lead.assignedUser ? (
-                              <Typography variant='body2'>
-                                {lead.assignedUser.name} {lead.assignedUser.lastName}
-                              </Typography>
-                            ) : (
-                              <Typography variant='body2' color='textSecondary'>
-                                <em>Sin asignar</em>
-                              </Typography>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant='body2'>
-                              {format(new Date(lead.createdAt), "d 'de' MMM, yyyy", { locale: es })}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align='right'>
-                            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                              <IconButton size='small' color='secondary' onClick={() => handleOpenModal('view', lead)}>
-                                <Icon icon='tabler:eye' />
-                              </IconButton>
-                              <IconButton size='small' color='primary' onClick={() => handleOpenModal('edit', lead)}>
-                                <Icon icon='tabler:edit' />
-                              </IconButton>
-                              <IconButton size='small' color='error' onClick={() => handleOpenDeleteDialog(lead)}>
-                                <Icon icon='tabler:trash' />
-                              </IconButton>
-                            </Box>
+                    </TableHead>
+                    <TableBody>
+                      {leads.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={8} align='center'>
+                            No se encontraron leads.
                           </TableCell>
                         </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              )}
+                      ) : (
+                        leads.map(lead => (
+                          <TableRow key={lead.id} hover>
+                            <TableCell>
+                              <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                                {lead.name}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>{lead.company}</TableCell>
+                            <TableCell>
+                              <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                                <Typography variant='body2'>{lead.email}</Typography>
+                                <Typography variant='caption' color='textSecondary'>{lead.phone || '-'}</Typography>
+                              </Box>
+                            </TableCell>
+                            <TableCell>
+                              <Chip
+                                label={statusLabels[lead.status] || lead.status}
+                                color={statusColors[lead.status] || 'default'}
+                                size='small'
+                                variant='outlined'
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Chip
+                                label={priorityLabels[lead.priority] || lead.priority}
+                                color={priorityColors[lead.priority] || 'default'}
+                                size='small'
+                              />
+                            </TableCell>
+                            <TableCell>
+                              {lead.assignedUser ? (
+                                <Typography variant='body2'>
+                                  {lead.assignedUser.name} {lead.assignedUser.lastName}
+                                </Typography>
+                              ) : (
+                                <Typography variant='body2' color='textSecondary'>
+                                  <em>Sin asignar</em>
+                                </Typography>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant='body2'>
+                                {format(new Date(lead.createdAt), "d 'de' MMM, yyyy", { locale: es })}
+                              </Typography>
+                            </TableCell>
+                            <TableCell align='right'>
+                              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                <IconButton size='small' color='secondary' onClick={() => handleOpenDrawer('view', lead)}>
+                                  <Icon icon='tabler:eye' />
+                                </IconButton>
+                                <IconButton size='small' color='primary' onClick={() => handleOpenDrawer('edit', lead)}>
+                                  <Icon icon='tabler:edit' />
+                                </IconButton>
+                                <IconButton size='small' color='error' onClick={() => handleOpenDeleteDialog(lead)}>
+                                  <Icon icon='tabler:trash' />
+                                </IconButton>
+                              </Box>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                )}
+              </TableContainer>
               <TablePagination
                 component='div'
                 count={total}
@@ -358,16 +362,16 @@ const LeadListView = () => {
                 }}
                 labelRowsPerPage='Filas por página:'
               />
-            </TableContainer>
+            </Paper>
           </CardContent>
         </Card>
       </Grid>
 
       {/* Leads Modal */}
-      <ModalLeads
-        open={isModalOpen}
-        onClose={handleCloseModal}
-        mode={modalMode}
+      <LeadDetailsDrawer
+        open={drawerOpen}
+        onClose={handleCloseDrawer}
+        mode={drawerMode}
         lead={selectedLead}
         users={users}
         onSubmit={handleSubmitLead}

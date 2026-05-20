@@ -8,7 +8,6 @@ import HorizontalNavItems from 'src/navigation/horizontal'
 import VerticalAppBarContent from './components/vertical/AppBarContent'
 import HorizontalAppBarContent from './components/horizontal/AppBarContent'
 import { useSettings } from 'src/@core/hooks/useSettings'
-import { useAuth } from 'src/hooks/useAuth'
 
 interface Props {
   children: ReactNode
@@ -17,7 +16,6 @@ interface Props {
 
 const UserLayout = ({ children, contentHeightFixed }: Props) => {
   const { settings, saveSettings } = useSettings()
-  const { user } = useAuth()
   const hidden = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'))
 
   if (hidden && settings.layout === 'horizontal') {

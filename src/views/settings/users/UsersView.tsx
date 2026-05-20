@@ -73,7 +73,7 @@ interface CreateUserFormData {
 const UsersView = () => {
   // ** Hooks
   const { user: currentUser } = useAuth()
-  
+
   // ** States
   const [users, setUsers] = useState<User[]>([])
   const [roles, setRoles] = useState<Role[]>([])
@@ -110,7 +110,7 @@ const UsersView = () => {
         apiConnector.get<Role[]>('/users/roles/available'),
         apiConnector.get<Role[]>('/users/roles/my-roles')
       ])
-      
+
       setRoles([...globalRoles, ...customRoles])
     } catch (error) {
       console.error('Error fetching roles:', error)
@@ -173,7 +173,7 @@ const UsersView = () => {
 
   const handleUpdateUser = async () => {
     if (!selectedUser) return
-    
+
     try {
       const updateData: any = {
         name: formData.name,
@@ -181,7 +181,7 @@ const UsersView = () => {
         email: formData.email,
         roleId: formData.roleId
       }
-      
+
       await apiConnector.put(`/users/${selectedUser.id}`, updateData)
       await fetchUsers()
       handleCloseEditDialog()
@@ -203,7 +203,7 @@ const UsersView = () => {
 
   const handleDeleteUser = async () => {
     if (!selectedUser) return
-    
+
     try {
       await apiConnector.remove(`/users/${selectedUser.id}`)
       await fetchUsers()
@@ -252,56 +252,58 @@ const UsersView = () => {
             }
           />
           <CardContent>
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Nombre</TableCell>
-                    <TableCell>Email</TableCell>
-                    <TableCell>Rol</TableCell>
-                    <TableCell>Admin</TableCell>
-                    <TableCell>Acciones</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {users.map(user => (
-                    <TableRow key={user.id}>
-                      <TableCell>{`${user.name} ${user.lastName}`}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                        {user.role ? (
-                          <Chip
-                            label={user.role.name}
-                            size='small'
-                            sx={{
-                              backgroundColor: user.role.color,
-                              color: '#fff'
-                            }}
-                          />
-                        ) : (
-                          <Chip label='Sin rol' size='small' variant='outlined' />
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {user.isAdmin ? (
-                          <Chip label='Admin' color='primary' size='small' />
-                        ) : (
-                          <Chip label='Usuario' size='small' variant='outlined' />
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <IconButton size='small' color='primary' onClick={() => handleOpenEditDialog(user)}>
-                          <Icon icon='tabler:edit' />
-                        </IconButton>
-                        <IconButton size='small' color='error' onClick={() => handleOpenDeleteDialog(user)}>
-                          <Icon icon='tabler:trash' />
-                        </IconButton>
-                      </TableCell>
+            <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+              <TableContainer sx={{ maxHeight: 760 }}>
+                <Table stickyHeader aria-label='users table'>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Nombre</TableCell>
+                      <TableCell>Email</TableCell>
+                      <TableCell>Rol</TableCell>
+                      <TableCell>Admin</TableCell>
+                      <TableCell>Acciones</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {users.map(user => (
+                      <TableRow key={user.id} hover>
+                        <TableCell>{`${user.name} ${user.lastName}`}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          {user.role ? (
+                            <Chip
+                              label={user.role.name}
+                              size='small'
+                              sx={{
+                                backgroundColor: user.role.color,
+                                color: '#fff'
+                              }}
+                            />
+                          ) : (
+                            <Chip label='Sin rol' size='small' variant='outlined' />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {user.isAdmin ? (
+                            <Chip label='Admin' color='primary' size='small' />
+                          ) : (
+                            <Chip label='Usuario' size='small' variant='outlined' />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <IconButton size='small' color='primary' onClick={() => handleOpenEditDialog(user)}>
+                            <Icon icon='tabler:edit' />
+                          </IconButton>
+                          <IconButton size='small' color='error' onClick={() => handleOpenDeleteDialog(user)}>
+                            <Icon icon='tabler:trash' />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
           </CardContent>
         </Card>
       </Grid>

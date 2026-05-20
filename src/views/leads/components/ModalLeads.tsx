@@ -103,12 +103,14 @@ const ModalLeads = ({ open, onClose, mode, lead, users, onSubmit }: ModalLeadsPr
   const getTitle = () => {
     if (mode === 'create') return 'Nuevo Lead'
     if (mode === 'edit') return 'Editar Lead'
+
     return 'Detalles del Lead'
   }
 
   const getIcon = () => {
     if (mode === 'create') return 'tabler:user-plus'
     if (mode === 'edit') return 'tabler:edit'
+
     return 'tabler:eye'
   }
 

@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react'
-import { Box, Card, CardContent, CardHeader, CircularProgress, Typography } from '@mui/material'
+import React, { useEffect, useState, useCallback, useMemo } from 'react'
+import { Box, Card, CardContent, CardHeader, CircularProgress } from '@mui/material'
 import {
   DndContext,
   DragOverlay,
@@ -12,7 +12,7 @@ import {
   DragOverEvent,
   DragEndEvent
 } from '@dnd-kit/core'
-import { sortableKeyboardCoordinates, arrayMove } from '@dnd-kit/sortable'
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 
 import apiConnector from 'src/services/api.service'
 import { Lead } from '../leads/components/ModalLeads'
@@ -48,9 +48,9 @@ const PipelineView = () => {
   const fetchLeads = useCallback(async () => {
     try {
       setLoading(true)
-      // Fetch a large number of leads to populate the pipeline
-      const response: any = await apiConnector.get('/leads?page=0&pageSize=1000')
-      setLeads(response.data || [])
+      const response: any = await apiConnector.get('/leads', { page: 0, pageSize: 1000 })
+      const payload = response?.data ?? response
+      setLeads(Array.isArray(payload) ? payload : [])
     } catch (error) {
       console.error('Error fetching leads:', error)
     } finally {
@@ -65,18 +65,25 @@ const PipelineView = () => {
   // Get active lead for overlay
   const activeLead = activeId ? leads.find(l => l.id.toString() === activeId) : null
 
-  // Group leads by status
-  const getLeadsByStatus = (status: string) => {
-    return leads.filter(lead => lead.status === status)
-  }
+  const leadStatusMap = useMemo(() => {
+    return leads.reduce<Record<string, string>>((map, lead) => {
+      map[lead.id.toString()] = lead.status
 
-  // Find which status column an item belongs to
+      return map
+    }, {})
+  }, [leads])
+
+  const getLeadsByStatus = useCallback(
+    (status: string) => leads.filter(lead => lead.status === status),
+    [leads]
+  )
+
   const findContainer = (id: string) => {
-    if (STATUS_COLUMNS.map(c => c.id).includes(id)) {
-      return id // It's a column ID
+    if (STATUS_COLUMNS.some(c => c.id === id)) {
+      return id
     }
-    const lead = leads.find(l => l.id.toString() === id)
-    return lead ? lead.status : null
+
+    return leadStatusMap[id] ?? null
   }
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -88,41 +95,15 @@ const PipelineView = () => {
     const { active, over } = event
     if (!over) return
 
-    const activeId = active.id as string
+    const activeLead = active.data.current as Lead
     const overId = over.id as string
-
-    const activeContainer = findContainer(activeId)
     const overContainer = findContainer(overId)
 
-    if (!activeContainer || !overContainer || activeContainer === overContainer) {
+    if (!activeLead || !overContainer || activeLead.status === overContainer) {
       return
     }
 
-    // Moving between columns
-    setLeads(prev => {
-      const activeItems = prev.filter(l => l.status === activeContainer)
-      const overItems = prev.filter(l => l.status === overContainer)
-
-      const activeIndex = activeItems.findIndex(l => l.id.toString() === activeId)
-      const overIndex = overItems.findIndex(l => l.id.toString() === overId)
-
-      const newIndex =
-        overIndex >= 0
-          ? overIndex
-          : overItems.length + 1
-
-      const activeLead = prev.find(l => l.id.toString() === activeId)
-      if (!activeLead) return prev
-
-      // Create a new array with the modified lead
-      const nextLeads = prev.filter(l => l.id.toString() !== activeId)
-      
-      const modifiedLead = { ...activeLead, status: overContainer }
-      
-      // We aren't doing strict insertion ordering here for the global array,
-      // but just updating the status so it renders in the new column
-      return [...nextLeads, modifiedLead]
-    })
+    setLeads(prev => prev.map(lead => (lead.id === activeLead.id ? { ...lead, status: overContainer } : lead)))
   }
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -131,42 +112,20 @@ const PipelineView = () => {
 
     if (!over) return
 
-    const activeIdStr = active.id as string
-    const activeLead = leads.find(l => l.id.toString() === activeIdStr)
+    const activeLead = active.data.current as Lead
     const overContainer = findContainer(over.id as string)
 
-    if (activeLead && overContainer) {
-      const prevStatus = activeLead.status
-      
-      // Visual reordering within the same column
-      const activeContainer = findContainer(activeIdStr)
-      if (activeContainer === overContainer) {
-        const containerItems = leads.filter(l => l.status === activeContainer)
-        const activeIndex = containerItems.findIndex(l => l.id.toString() === activeIdStr)
-        const overIndex = containerItems.findIndex(l => l.id.toString() === over.id as string)
-        
-        if (activeIndex !== overIndex) {
-          // You could reorder the array here if you need strict index matching,
-          // but for status updates we just care if it changed columns.
-        }
-      }
+    if (!activeLead || !overContainer || activeLead.status === overContainer) {
+      return
+    }
 
-      // If it changed columns during the drag, update backend
-      // (The local state is already updated via handleDragOver, but we might want to check the original vs new)
-      // Actually, since local state is instantly updated in handleDragOver, 
-      // activeLead.status might already be overContainer. 
-      // Let's rely on firing the API if it moved.
-      
-      // To reliably detect change, we can fetch or just always PATCH with the overContainer
-      try {
-        await apiConnector.put(`/leads/${activeIdStr}`, {
-          status: overContainer
-        })
-      } catch (error) {
-        console.error('Failed to update lead status on backend', error)
-        // Ideally we would revert the state on failure
-        fetchLeads() 
-      }
+    try {
+      await apiConnector.patch(`/leads/${activeLead.id}`, {
+        status: overContainer
+      })
+    } catch (error) {
+      console.error('Failed to update lead status on backend', error)
+      fetchLeads()
     }
   }
 

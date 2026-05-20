@@ -1,4 +1,3 @@
-import React from 'react'
 import PipelineView from 'src/views/pipeline/PipelineView'
 
 const PipelinePage = () => {
